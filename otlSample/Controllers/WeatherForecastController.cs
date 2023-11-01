@@ -19,6 +19,7 @@ namespace otlSample.Controllers
         private readonly ActivitySource activitySource;
         private readonly Counter<long> freezingDaysCounter;
         private readonly Counter<long> counterOfController;
+        private readonly Histogram<long> durationOfController;
 
         public WeatherForecastController(ILogger<WeatherForecastController> logger, Instrumentation instrumentation)
         {
@@ -28,11 +29,13 @@ namespace otlSample.Controllers
             this.activitySource = instrumentation.ActivitySource;
             this.freezingDaysCounter = instrumentation.FreezingDaysCounter;
             this.counterOfController = instrumentation.CountOfCallingController;
+            this.durationOfController = instrumentation.durationOfResponding;
         }
 
         [HttpGet]
         public IEnumerable<WeatherForecast> Get()
         {
+            var startTime = DateTimeOffset.Now;
             using var scope = this.logger.BeginScope("{Id}", Guid.NewGuid().ToString("N"));
 
            
@@ -76,6 +79,13 @@ namespace otlSample.Controllers
                 Thread.Sleep(new TimeSpan(0, 0, 1));
                 // Do some work that 'child2' tracks
             }
+
+            var endTime = DateTimeOffset.Now;
+            var duration = endTime - startTime;
+
+           
+            // Record the response time in the histogram
+            this.durationOfController.Record(duration.Milliseconds);
 
             return forecast;
         }

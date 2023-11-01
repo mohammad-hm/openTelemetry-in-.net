@@ -45,13 +45,13 @@ appBuilder.Services.AddOpenTelemetry()
 
         builder.AddJaegerExporter(o =>
          {
-             o.Endpoint = new Uri("http://ip:4318");
+             o.Endpoint = new Uri("");
              o.Protocol = JaegerExportProtocol.HttpBinaryThrift;
          });
         builder.AddOtlpExporter(otlpOptions =>
         {
             // Use IConfiguration directly for Otlp exporter endpoint option.
-            otlpOptions.Endpoint = new Uri(appBuilder.Configuration.GetValue("Otlp:Endpoint", defaultValue: "http://ip:4317")!);
+            otlpOptions.Endpoint = new Uri(appBuilder.Configuration.GetValue("Otlp:Endpoint", defaultValue: "")!);
             otlpOptions.Protocol = OtlpExportProtocol.Grpc;
         });
 
@@ -66,13 +66,16 @@ appBuilder.Services.AddOpenTelemetry()
             .AddMeter(Instrumentation.MeterName)
 
         .AddHttpClientInstrumentation()
-        .AddAspNetCoreInstrumentation();
-
+        .AddAspNetCoreInstrumentation()
+        //To customize the bucket aggregation values accordingly to every Histogram we need to use a View.
+            .AddView(
+        instrumentName: "histogram.wetherforecast",
+        new ExplicitBucketHistogramConfiguration { Boundaries = new double[] { 2, 5, 7 } });
         builder.AddConsoleExporter();
         builder.AddOtlpExporter(otlpOptions =>
         {
             // Use IConfiguration directly for Otlp exporter endpoint option.
-            otlpOptions.Endpoint = new Uri(appBuilder.Configuration.GetValue("Otlp:Endpoint", defaultValue: "http://ip:4317")!);
+            otlpOptions.Endpoint = new Uri(appBuilder.Configuration.GetValue("Otlp:Endpoint", defaultValue: "")!);
             otlpOptions.Protocol = OtlpExportProtocol.Grpc;
         });
     });
