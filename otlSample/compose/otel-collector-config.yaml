@@ -1,0 +1,29 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  batch:
+
+# export to prometheus
+exporters:
+  otlp:
+    endpoint: "ip:port"
+    tls:
+      insecure: true
+  prometheus:
+    endpoint: "ip:port"
+  
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
